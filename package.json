@@ -1,0 +1,28 @@
+{
+  "name": "api-wrapper",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "dependencies": {
+    "@types/gulp": "^4.0.7",
+    "common-js": "^0.3.8"
+  },
+  "devDependencies": {
+    "gulp": "^4.0.0",
+    "gulp-typescript": "^6.0.0-alpha.1",
+    "typescript": "^4.0.3"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tomise20/ts-api-wrapper.git"
+  },
+  "author": "tomise20",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/tomise20/ts-api-wrapper/issues"
+  },
+  "homepage": "https://github.com/tomise20/ts-api-wrapper#readme"
+}
