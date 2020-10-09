@@ -20,31 +20,71 @@ class Wrapper {
             return false;
         };
     }
-    get(url) {
-        let request = http_1.default.get(url, resp => {
-            let data = "";
-            if (!this.checkStatus(resp.statusCode)) {
-                console.log(resp.statusMessage);
-                return resp.statusMessage;
-            }
-            resp.on("data", chunk => {
-                data += chunk;
-            });
-            resp.on("end", () => {
-                if (!this.checkContentType(resp.headers)) {
-                    console.log("Incorrect header!");
-                    return false;
+    async get(url) {
+        let result;
+        let error;
+        let isError;
+        return new Promise((resolve, reject) => {
+            http_1.default.get(url, resp => {
+                let data = "";
+                if (!this.checkStatus(resp.statusCode)) {
+                    error.push(resp.statusMessage);
+                    isError = true;
                 }
-                let url = JSON.parse(data).title;
-                console.log(url);
-                return true;
+                if (!this.checkContentType(resp.headers)) {
+                    error.push("Incorrect header!");
+                    isError = true;
+                }
+                resp.on("data", chunk => {
+                    data += chunk;
+                });
+                resp.on("end", () => {
+                    if (!isError) {
+                        result = JSON.parse(data);
+                        resolve(result);
+                    }
+                    else {
+                        reject(error);
+                    }
+                });
             });
-            return "success";
-        })
-            .on("error", err => {
-            console.log("Error: " + err.message);
         });
-        request.end();
+    }
+    async post(url, data) {
+        let error;
+        let isError;
+        return new Promise((resolve, reject) => {
+            let rawData = "";
+            let result = "";
+            rawData = JSON.stringify(data);
+            const options = {
+                hostname: 'localhost',
+                port: 3000,
+                path: url,
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json; charset=utf-8',
+                    'Content-Length': rawData.length
+                }
+            };
+            const req = http_1.default.request(options, resp => {
+                resp.on('data', chunk => result += chunk);
+                console.log(rawData);
+                resp.on('error', reject);
+                resp.on("end", () => {
+                    resp.statusCode === 200
+                        ? resolve(result)
+                        : reject(result);
+                });
+            });
+            if (!isError) {
+                req.write(rawData);
+                req.end();
+            }
+            else {
+                reject(error);
+            }
+        });
     }
 }
 exports.default = Wrapper;
