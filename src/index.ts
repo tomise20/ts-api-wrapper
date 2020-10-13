@@ -1,8 +1,10 @@
-import Wrapper from './wrapper';
+import { HttpError } from './interfaces/HttpError';
+import { HttpResponse } from './interfaces/HttpResponse';
+import Tosix from './tosix';
 
-const wrapper = new Wrapper();
+const tosix = new Tosix();
 
-/* wrapper.get("http://dummy.restapiexample.com/api/v1/employees")
+/* tosix.get("http://dummy.restapiexample.com/api/v1/employees")
     .then(data => {
         console.log(data);
     })
@@ -10,13 +12,12 @@ const wrapper = new Wrapper();
         console.log("Error: " + error);
     }); */
 
-let data: Object = {title: "test"};
+let body: any = "Test";
 
-wrapper.post("/test", data)
-    .then(data => {
-        console.log("Válasz: ");
-        console.log(data);
+tosix.post("/test", body)
+    .then((res: HttpResponse) => {
+        console.log(res.data);
     })
-    .catch(error => {
-        console.log("Error: " + error[0]);
+    .catch((error: HttpError) => {
+        console.log("Error: " + error.messages[0]);
     });
