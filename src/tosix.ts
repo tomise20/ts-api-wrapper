@@ -2,11 +2,11 @@ import http, { IncomingMessage } from "http";
 import {RequestOptions} from 'https';
 import { HttpError } from "./interfaces/HttpError";
 import { HttpResponse } from "./interfaces/HttpResponse";
+import { ServerResponse } from "./interfaces/ServerResponse";
 
 class Tosix {
 
   async get(url: string): Promise<HttpResponse> {
-    let result: Object[];
     let error: HttpError = {
         messages: []
     };
@@ -14,7 +14,6 @@ class Tosix {
 
     return new Promise((resolve, reject) => {
       http.get(url, res => {
-        let data: string = "";
         
         if(res.statusCode !== 200) {
             error.messages.push(<string>res.statusMessage);
@@ -26,18 +25,24 @@ class Tosix {
             isError = true;
         }
 
-        res.on("data", chunk => {
-            data += chunk;
+        let data: ServerResponse;
+        let rawData = "";
+        res.on('data', (chunk) => {
+
+            rawData += chunk.toString('utf8');
+            try {
+                data = JSON.parse(rawData);
+            } catch (ex) {
+                isError = true;
+                error.messages.push("content was not valid json");
+            }
         });
 
         res.on("end", () => {
             if(!isError) {
-                result = JSON.parse(data);
                 resolve({
-                    statusCode: 200,
-                    data: {
-                        message: "success request!"
-                    }
+                    statusCode: <number>res.statusCode,
+                    data: data.data
                 });
             } else {
                 reject(error);
@@ -76,12 +81,13 @@ class Tosix {
             error.messages.push('cannot handle the data provided!')
         }
 
-        let data = '';
+        let data: ServerResponse;
+        let rawData = "";
         res.on('data', (chunk) => {
 
-        data += chunk.toString('utf8');
+            rawData += chunk.toString('utf8');
             try {
-                JSON.parse(data);
+                data = JSON.parse(rawData);
             } catch (ex) {
                 isError = true;
                 error.messages.push("content was not valid json");
@@ -93,8 +99,8 @@ class Tosix {
                 reject(error);
             } else {
                 resolve({
-                    statusCode: 201,
-                    data: JSON.parse(data)
+                    statusCode: <number>res.statusCode,
+                    data: data.data
                 });
             }
         });
@@ -103,6 +109,65 @@ class Tosix {
 
         request.write(JSON.stringify(rawData), () => {
             console.log('data has been written!');
+        });
+
+        request.end();
+    });
+  }
+
+  async delete(url: string): Promise<HttpResponse> {
+    let error: HttpError = {
+        messages: []
+    };
+    let isError: boolean;
+
+    return new Promise((resolve, reject) => {
+        const options: RequestOptions = {
+            hostname: 'localhost',
+            port: 3000,
+            path: url,
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        }
+
+        const request = http.request(options, (res: IncomingMessage) => {
+            
+        if(res.statusCode !== 200) {
+            isError = true;
+            error.messages.push('error occurred!')
+        }
+
+        if(!this.checkContentType(res.headers)) {
+            isError = true;
+            error.messages.push('cannot handle the data provided!')
+        }
+
+        let data: ServerResponse;
+        let rawData = "";
+        res.on('data', (chunk) => {
+
+            rawData += chunk.toString('utf8');
+            try {
+                data = JSON.parse(rawData);
+            } catch (ex) {
+                isError = true;
+                error.messages.push("content was not valid json");
+            }
+        });
+
+        res.on('end', () => {
+            if(isError) {
+                reject(error);
+            } else {
+                resolve({
+                    statusCode: <number>res.statusCode,
+                    data: data.data
+                });
+            }
+        });
+            
         });
 
         request.end();

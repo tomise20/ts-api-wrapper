@@ -12,10 +12,17 @@ const tosix = new tosix_1.default();
     .catch(error => {
         console.log("Error: " + error);
     }); */
-let body = "Test";
-tosix.post("/test", body)
+// let body: any = "Test";
+// tosix.post("/test", body)
+//     .then((res: HttpResponse) => {
+//         console.log(res.data);
+//     })
+//     .catch((error: HttpError) => {
+//         console.log("Error: " + error.messages[0]);
+//     });
+tosix.delete("/test")
     .then((res) => {
-    console.log(res.data);
+    console.log(res);
 })
     .catch((error) => {
     console.log("Error: " + error.messages[0]);
