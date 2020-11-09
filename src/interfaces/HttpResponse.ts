@@ -1,4 +1,5 @@
 export interface HttpResponse {
     statusCode: number,
-    data: Object
+    data: Object,
+    message?: String
 }

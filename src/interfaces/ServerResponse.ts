@@ -1,4 +1,5 @@
 export interface ServerResponse {
     data: Object;
-    error: Object | null
+    error: Object | null,
+    message?: String
 }
