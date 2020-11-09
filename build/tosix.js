@@ -16,14 +16,12 @@ class Tosix {
         };
     }
     async get(url) {
-        let result;
         let error = {
-            messages: []
+            messages: [],
         };
         let isError;
         return new Promise((resolve, reject) => {
-            http_1.default.get(url, res => {
-                let data = "";
+            http_1.default.get(url, (res) => {
                 if (res.statusCode !== 200) {
                     error.messages.push(res.statusMessage);
                     isError = true;
@@ -32,10 +30,12 @@ class Tosix {
                     error.messages.push("Incorrect header!");
                     isError = true;
                 }
-                res.on("data", chunk => {
-                    data += chunk;
+                let data;
+                let rawData = "";
+                res.on("data", (chunk) => {
+                    rawData += chunk.toString("utf8");
                     try {
-                        JSON.parse(data);
+                        data = JSON.parse(rawData);
                     }
                     catch (ex) {
                         isError = true;
@@ -44,12 +44,9 @@ class Tosix {
                 });
                 res.on("end", () => {
                     if (!isError) {
-                        result = JSON.parse(data);
                         resolve({
-                            statusCode: 200,
-                            data: {
-                                message: "success request!"
-                            }
+                            statusCode: res.statusCode,
+                            data: data.data,
                         });
                     }
                     else {
@@ -61,85 +58,32 @@ class Tosix {
     }
     async post(url, rawData) {
         let error = {
-            messages: []
+            messages: [],
         };
         let isError;
         return new Promise((resolve, reject) => {
             const options = {
-                hostname: 'localhost',
+                hostname: "localhost",
                 port: 3000,
                 path: url,
-                method: 'POST',
+                method: "POST",
                 headers: {
-                    'Content-Type': 'application/json',
-                }
+                    "Content-Type": "application/json",
+                },
             };
             const request = http_1.default.request(options, (res) => {
-                if (res.statusCode !== 201) {
+                if (res.statusCode !== 201 && res.statusCode !== 200) {
                     isError = true;
-                    error.messages.push('error occurred!');
+                    error.messages.push(res.statusMessage);
                 }
                 if (!this.checkContentType(res.headers)) {
                     isError = true;
-                    error.messages.push('cannot handle the data provided!');
-                }
-                let data = '';
-                res.on('data', (chunk) => {
-                    data += chunk.toString('utf8');
-                    try {
-                        JSON.parse(data);
-                    }
-                    catch (ex) {
-                        isError = true;
-                        error.messages.push("content was not valid json");
-                    }
-                });
-                res.on('end', () => {
-                    if (isError) {
-                        reject(error);
-                    }
-                    else {
-                        resolve({
-                            statusCode: 201,
-                            data: JSON.parse(data)
-                        });
-                    }
-                });
-            });
-            request.write(JSON.stringify(rawData), () => {
-                console.log('data has been written!');
-            });
-            request.end();
-        });
-    }
-    async delete(url) {
-        let error = {
-            messages: []
-        };
-        let isError;
-        return new Promise((resolve, reject) => {
-            const options = {
-                hostname: 'localhost',
-                port: 3000,
-                path: url,
-                method: 'DELETE',
-                headers: {
-                    'Content-Type': 'application/json',
-                }
-            };
-            const request = http_1.default.request(options, (res) => {
-                if (res.statusCode !== 200) {
-                    isError = true;
-                    error.messages.push('error occurred!');
-                }
-                if (!this.checkContentType(res.headers)) {
-                    isError = true;
-                    error.messages.push('cannot handle the data provided!');
+                    error.messages.push("cannot handle the data provided!");
                 }
                 let data;
                 let rawData = "";
-                res.on('data', (chunk) => {
-                    rawData += chunk.toString('utf8');
+                res.on("data", (chunk) => {
+                    rawData += chunk.toString("utf8");
                     try {
                         data = JSON.parse(rawData);
                     }
@@ -148,14 +92,128 @@ class Tosix {
                         error.messages.push("content was not valid json");
                     }
                 });
-                res.on('end', () => {
+                res.on("end", () => {
                     if (isError) {
                         reject(error);
                     }
                     else {
                         resolve({
                             statusCode: res.statusCode,
-                            data: data.data
+                            data: data.data,
+                        });
+                    }
+                });
+            });
+            request.write(JSON.stringify(rawData), () => {
+                console.log("data has been written!");
+            });
+            request.end();
+        });
+    }
+    /* async put(url: string, rawData: Object): Promise<HttpResponse> {
+        let error: HttpError = {
+            messages: [],
+        };
+        let isError: boolean;
+
+        return new Promise((resolve, reject) => {
+            const options: RequestOptions = {
+                hostname: "localhost",
+                port: 3000,
+                path: url,
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+            };
+
+            const request = http.request(options, (res: IncomingMessage) => {
+                if (res.statusCode !== 201 && res.statusCode !== 200) {
+                    isError = true;
+                    error.messages.push(<string>res.statusMessage);
+                }
+
+                if (!this.checkContentType(res.headers)) {
+                    isError = true;
+                    error.messages.push("cannot handle the data provided!");
+                }
+
+                let data: ServerResponse;
+                let rawData: string = "";
+                res.on("data", (chunk) => {
+                    rawData += chunk.toString("utf8");
+                    try {
+                        data = JSON.parse(rawData);
+                    } catch (ex) {
+                        isError = true;
+                        error.messages.push("content was not valid json");
+                    }
+                });
+
+                res.on("end", () => {
+                    if (isError) {
+                        reject(error);
+                    } else {
+                        resolve({
+                            statusCode: <number>res.statusCode,
+                            data: data.data,
+                        });
+                    }
+                });
+            });
+
+            request.write(JSON.stringify(rawData), () => {
+                console.log("data has been written!");
+            });
+
+            request.end();
+        });
+    } */
+    async delete(url) {
+        let error = {
+            messages: [],
+        };
+        let isError;
+        return new Promise((resolve, reject) => {
+            const options = {
+                hostname: "localhost",
+                port: 3000,
+                path: url,
+                method: "DELETE",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+            };
+            const request = http_1.default.request(options, (res) => {
+                if (res.statusCode !== 200) {
+                    isError = true;
+                    error.messages.push(res.statusMessage);
+                }
+                if (!this.checkContentType(res.headers)) {
+                    isError = true;
+                    error.messages.push("cannot handle the data provided!");
+                }
+                let data;
+                let rawData = "";
+                res.on("data", (chunk) => {
+                    rawData += chunk.toString("utf8");
+                    try {
+                        data = JSON.parse(rawData);
+                    }
+                    catch (ex) {
+                        isError = true;
+                        error.messages.push("content was not valid json");
+                    }
+                });
+                res.on("end", () => {
+                    if (isError) {
+                        reject(error);
+                    }
+                    else {
+                        resolve({
+                            statusCode: res.statusCode,
+                            data: data.data,
+                            message: data.message,
                         });
                     }
                 });
